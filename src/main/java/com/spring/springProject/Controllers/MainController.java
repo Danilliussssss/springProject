@@ -10,14 +10,12 @@ import com.spring.springProject.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,21 +26,26 @@ public class MainController {
     private ProductService service;
     private Optional<Product> product;
     private List<Product> products;
+    List<Category> categories;
     private int pages;
     private int size;
 
+    //Метод, срабатывающий при загрузке главной страницы
     @GetMapping("/")
-    public String getDataToDB(Model model) throws IOException, URISyntaxException, InterruptedException {
+    public String start(Model model) throws IOException, URISyntaxException, InterruptedException {
 
         products =  service.getAll();
+        categories = service.getCategory();
 
         for(Product product: products) {
             service.createProduct(product);
             model.addAttribute("products", products);
+            model.addAttribute("categories",categories);
         }
         uniqueCategory();
        return "main";
     }
+
     @GetMapping("/get")
     public String getDataToServer(Model model) throws IOException, URISyntaxException, InterruptedException {
         ConnectServer server = new ConnectServer();
@@ -56,6 +59,7 @@ public class MainController {
         }
         return "main";
     }
+    //Метод, обрабатывающий Get-запрос на получение товара по id
     @GetMapping("/product")
     public String getProductById(Model model,Long id){
         if(id!=null) {
@@ -68,11 +72,26 @@ public class MainController {
         }
         return "main";
     }
+    //Метод поиска товаров по категории
+     public void findByCategory(String category){
+        if(StringUtils.hasText(category)) {
+            System.out.println("Выбранная категория: " + category);
+            Iterator<Product> iterator = products.iterator();
+            while (iterator.hasNext()){
+                Product product1 = iterator.next();
+                if(!category.equals( product1.getCategory().getCategory()))
+                    iterator.remove();
+            }
+        }
 
+     }
+     //Пагинация товаров с фильтрацией по цене и категориям.
     @GetMapping("/page")
-    public String page(Model model, Integer size,Integer page,Double minPrice, Double maxPrice,boolean isTrue){
+    public String page(Model model, Integer size,Integer page,Double minPrice, Double maxPrice,boolean isTrue,String category){
 
        products = service.getAll();
+
+
 
         List<Category> unique;
         Iterator<Product> iterator = products.iterator();
@@ -90,7 +109,7 @@ public class MainController {
             minPrice=Double.MIN_VALUE;
         if(maxPrice==null)
            maxPrice =  Double.MAX_VALUE;
-
+        findByCategory(category);
         if(size==null)
             size=products.size();
         if(page==null)
@@ -123,7 +142,7 @@ public class MainController {
     }
 
     public List<Category> uniqueCategory(){
-        List<Category> categories =  service.getCategory();
+       categories =  service.getCategory();
         List<Category> result = new ArrayList<>();
         service.count();
 
@@ -140,6 +159,7 @@ public class MainController {
             System.out.println(category.getCategory());
         return result;
     }
+    // Удалить выбранный товар
     @PostMapping("/delete")
     public String delete(Model model){
         System.out.println(product.get().getId());
@@ -148,6 +168,7 @@ public class MainController {
         return "main";
 
     }
+    //Редактировать существующий товар
     @PostMapping("/save")
     public String save(Model model, String title,String category,double price,String description,Rating rating){
          product.get().setTitle(title);
@@ -159,6 +180,7 @@ public class MainController {
         service.createProduct(product.get());
         return "main";
     }
+    //Создать новый товар(метод переводит на другую страницу)
     @PostMapping("/create")
     public String create(){
         return "redirect:/create";

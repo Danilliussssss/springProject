@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class CreateController {
     @Autowired
     private ProductService service;
+    //Метод, срабатываемый при переходе на страницу создания нового метода
      @GetMapping("/create")
      public String start(Model model){
 
          return "create";
      }
+    //Создать новый товар
      @PostMapping("/createProduct")
      public String create(Model model, String title, String category, double price, String description, Rating rating){
          Category category1 = new Category(category);

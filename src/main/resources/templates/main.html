@@ -16,8 +16,16 @@
     <input type="number"  id="page" name="page" placeholder="Номер страницы"  >
     <input type="number"  style="position: absolute;  left: 0px;  top: 40px;" id="minPrice" name="minPrice" step="0.01" placeholder="Мин. цена" >
     <input type="number"  style="position: absolute; left: 195px; top: 40px;" id="maxPrice" name="maxPrice" step="0.01" placeholder="Макс. цена" >
-    <label style="position: absolute; left: 80px; top: 80px;">Товары с уникальными категориями</label>
-    <input type="checkbox" style="position: absolute; left: 355px; top: 87px;" name="isTrue" id="isTrue" >
+    <label style="position: absolute; left: 80px; top: 75px;">Товары с уникальными категориями</label>
+    <input type="checkbox" style="position: absolute; left: 355px; top: 83px;" name="isTrue" id="isTrue" >
+    <label style="position: absolute; left: 55px; top: 107px;" for="category">Введите категорию:</label>
+    <input style="position: absolute; left: 205px; top: 107px;" type="text" id="category" name="category" list="categories">
+    <datalist id="categories">
+        <option th:each="category : ${categories}"
+                th:value="${category.category}"
+                th:text="${category.category}">
+        </option>
+    </datalist>
     <button class="btn btn-success rounded-pill px-3" type="submit">Применить</button>
 
 </form>
