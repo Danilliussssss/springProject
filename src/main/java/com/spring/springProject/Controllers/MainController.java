@@ -37,12 +37,13 @@ public class MainController {
         products =  service.getAll();
         categories = service.getCategory();
 
+
         for(Product product: products) {
             service.createProduct(product);
             model.addAttribute("products", products);
             model.addAttribute("categories",categories);
         }
-        uniqueCategory();
+        uniqueCategory(categories);
        return "main";
     }
 
@@ -87,16 +88,22 @@ public class MainController {
      }
      //Пагинация товаров с фильтрацией по цене и категориям.
     @GetMapping("/page")
-    public String page(Model model, Integer size,Integer page,Double minPrice, Double maxPrice,boolean isTrue,String category){
+    public String page(Model model, Integer size,Integer page,Double minPrice,
+                       Double maxPrice,boolean isTrue,String category,
+                       boolean isMin, boolean isUp,boolean isCategory){
 
        products = service.getAll();
+
+       products = sortProduct(products,isMin,isUp);
+       if(isCategory)
+           products = sortProductByCategory(products);
 
 
 
         List<Category> unique;
         Iterator<Product> iterator = products.iterator();
         if(isTrue) {
-            unique =uniqueCategory();
+            unique =uniqueCategory(categories);
 
             if(!unique.isEmpty())
                while (iterator.hasNext()){
@@ -140,13 +147,33 @@ public class MainController {
        // }
         return "main";
     }
+    //Сортировка товаров по убыванию или возрастанию цены
+    public List<Product> sortProduct(List<Product> productList,boolean isReverse,boolean isUp){
+        List<Product> result  = productList;
+        if(isReverse)
+        result.sort(Comparator.comparing(Product::getPrice).reversed());
+        else if(isUp) result.sort(Comparator.comparing(Product::getPrice));
 
-    public List<Category> uniqueCategory(){
-       categories =  service.getCategory();
+        return result;
+
+    }
+    //Сортировка товаров по категориям
+    public List<Product> sortProductByCategory(List<Product> productList){
+        List<Product> result  = productList;
+
+            result.sort(Comparator.comparing(p->p.getCategory().getCategory()));
+
+
+        return result;
+
+    }
+    //Поиск уникальных категорий
+    public List<Category> uniqueCategory(List<Category> categoryList){
+       categoryList =  service.getCategory();
         List<Category> result = new ArrayList<>();
         service.count();
 
-        for(Category category: categories) {
+        for(Category category: categoryList) {
             long count = 0;
             for (Product product1 : products)
                 if (product1.getCategory().equals(category))
@@ -155,8 +182,7 @@ public class MainController {
                 result.add(category);
 
         }
-        for(Category category: result)
-            System.out.println(category.getCategory());
+
         return result;
     }
     // Удалить выбранный товар
